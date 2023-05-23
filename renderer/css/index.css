@@ -1,0 +1,134 @@
+body{
+    height: 100vh;
+    margin: 0px;
+    box-sizing: border-box;
+}
+.mainScreen, .leftbar{
+    height: 100%;
+}
+.leftbar{
+    width: 25%;
+    height: 100%;
+    box-shadow: 1px 1px 5px 0px #CDAAF8;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    justify-content: space-between;
+}
+.colortext{
+    color: #A262F3;
+}
+.rightbar{
+    width: 75%;
+}
+.mainScreen{
+    display: flex;
+}
+header{
+    padding-inline: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+header>input{
+    padding: 10px;
+    width: 69%;
+    background-color: #F2F2F2;
+    height: 2.5em;
+    border: none;
+    border-radius: 10px;
+}
+header>input:focus{
+    outline: none;
+}
+.homeview{
+    display: flex;
+    width: 93%;
+    justify-content: center;
+}
+.details{
+    display: flex;
+}
+input[type=range]{
+    width: 100%;
+    /* -webkit-appearance: none;  /* Override default CSS styles 
+    appearance: none; */
+}
+
+.bold{
+    font-weight: bold;
+}
+.storage{
+    width: 90%;
+    padding: 1em;
+    border-radius: 10px;
+    background-color: #F2F2F2;
+}
+.btndiv{
+    display: flex;
+    justify-content: center;
+}
+.statview{
+    padding-inline: 40px;
+}
+#progress-bar {
+    width: 100%;
+    height: 15px;
+    border: none;
+    border-radius: 10px;
+    background-color: #F2F2F2;
+}
+/* Define the color of the progress bar fill */
+#progress-bar::-webkit-progress-value {
+    background-color: #A262F3;
+  }
+  
+  /* Define the color of the progress bar track */
+  #progress-bar::-webkit-progress-bar {
+    background-color: #F2F2F2;
+  }
+  
+  /* Style for Firefox */
+  #progress-bar::-moz-progress-bar {
+    background-color: #A262F3;
+  }
+.btnmain{
+    background-color: #CDAAF8;
+    width: 100%;
+    height: 2.5em;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 1em;
+}
+.head{
+    color: #A262F3;
+}
+.btn-row{
+    width: 49.4%;
+    background-color: #CDAAF8;
+    height: 2.5em;
+    border-radius: 10px;
+    border: none;
+}
+.active{
+    color: #CDAAF8;
+}
+.stats{
+    border: 2px solid #CDAAF8;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+}
+.btn-row1{
+    background-color: #CDAAF8;
+    border: none;
+    border-radius: 10px;
+    height: 100%;
+    width: 7em;
+    font-size: smaller;
+}
+.hr{
+    color: #CDAAF8;
+}

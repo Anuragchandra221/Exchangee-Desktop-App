@@ -1,0 +1,21 @@
+{
+  "name": "exchangee",
+  "productName": "exchangee",
+  "version": "1.0.0",
+  "description": "file transfer app for desktop",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "Anurag",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^24.3.1"
+  },
+  "dependencies": {
+    "check-disk-space": "^3.4.0",
+    "electronmon": "^2.0.2",
+    "nodemon": "^2.0.22"
+  }
+}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <title>Exchangee</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel = "stylesheet" 
+    href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <div class="mainScreen">
+      <div class="leftbar py-2 ps-3">
+        <div>
+          <h1 class="head">Exchangee</h1>
+          <nav class="navbars mt-4">
+            <div class="mb-3 bold active">Home</div>
+            <div class="mb-3 bold">Transfer Centre</div>
+            <div class="mb-3 bold">Settings</div>
+          </nav>
+        </div>
+        <div class="bold">
+          Logout
+        </div>
+      </div>
+      <div class="rightbar p-2 d-flex flex-column justify-content-center">
+        <header class="header mb-5">
+          
+            <input type="text" placeholder="Search" name="" id="">
+       <div>
+         <button class="btn-row1 bold me-3">Create</button>
+         <button class="btn-row1 bold">Upload</button>
+       </div>
+        </header>
+        <div class="">
+          <div class="homeview mx-auto">
+            <div class="profile col-6 d-flex align-items-start flex-column">
+              <span class="mb-1 colortext">Logged in as</span>
+              <h4 class="mb-4 bold">Anurag Chandra</h4>
+              <div class="storage">
+                <p>Available storage</p>
+                <h5 id="storage"></h5>
+              </div>
+            </div>
+            <div class="stats col-6">
+              <div class="details">
+                <div class="p-2">
+                  <p class="bold mb-1"><span class="colortext">Me</span>: <span id="me">User</span></p>
+                  <p class="bold mb-2"><span class="colortext">Receiver</span>: <span id="rec"></span></p>
+                </div>
+                <div class="p-2">
+                  <p class="mb-1"><span class="colortext">Speed</span>: <span id="speed"></span></p>
+                  <p><span id="received"></span><span id="total"></span></p>
+                </div>
+              </div>
+              <progress class="mb-2" id="progress-bar" value="0" max="100"></progress>
+              <div class="btndiv">
+                <button class="btn-row me-1 bold">pause</button>
+                <button class="btn-row bold">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <div class="statview mt-5">
+            <button class="btnmain bold">Send</button><br/>
+            <button id="connect" class="btnmain bold">Connect</button>
+            <div class="mb-4">
+              <button class="btn-row me-1 bold">Get Mobile App</button> 
+              <button class="btn-row bold">Share to web</button>
+            </div>
+            <hr class="m-0 hr"  />
+          </div> 
+        </div> 
+      </div>
+    </div>
+    <script src="./script.js"></script>
+  </body>
+</html>
