@@ -2,6 +2,7 @@ const fs = require('fs');
 const os = require('os')
 const ds = require('check-disk-space')
 
+
 const { contextBridge, ipcRenderer, ipcMain } = require('electron')
 
 contextBridge.exposeInMainWorld('server', {
@@ -16,7 +17,8 @@ contextBridge.exposeInMainWorld('server', {
   size: async ()=>{
     return size()
   },
-  storage: async ()=>{return diskSpace()}
+  storage: async ()=>{return diskSpace()},
+  files: (file)=>{handleFiles(file)}
 })
 async function client(){
   return new Promise((resolve, reject) => {
@@ -42,6 +44,13 @@ async function size(){
       resolve(size);
     });
   })
+}
+
+function handleFiles(file) {
+  // Show a file dialog to select a file
+  console.log("Clicked button")
+  console.log(file)
+  ipcRenderer.send('input-file', file)
 }
 
 function getMainDrivePath() {

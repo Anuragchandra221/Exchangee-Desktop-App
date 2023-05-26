@@ -54,7 +54,9 @@ input[type=range]{
     /* -webkit-appearance: none;  /* Override default CSS styles 
     appearance: none; */
 }
-
+input[type=file]{
+    display: none;
+}
 .bold{
     font-weight: bold;
 }

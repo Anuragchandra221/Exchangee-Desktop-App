@@ -1,4 +1,7 @@
-
+document.getElementById('file-upload').addEventListener('change',(event)=>{
+    const file = event.target.files[0].path.replace(/\\/g, '/')
+    server.files(file)
+})
 server.server()
 document.getElementById('me').innerHTML = server.me()
 const storage = async ()=>{
