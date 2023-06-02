@@ -1,0 +1,74 @@
+body{
+  margin: 0px;
+}
+
+.container{
+    display: flex;
+}
+
+.left{
+    flex: 1;
+}
+
+.right{
+    flex: 1;
+    font-family: 'Poppins';
+}
+
+
+.img {
+    float: left;
+    width: 450px; /* Adjust the width as needed */
+    margin-right: 100px; /* Adjust the margin as needed */
+    margin-left: 150px;
+     margin-top: 10px; 
+    
+  }
+
+  h1{
+    margin-left: 30px;
+    margin-top: 15px;
+    color: #a262f3;
+    font-family: 'Poppins';
+  }
+  h5{
+    margin-left: 30px;
+    color: #a262f3;
+    font-family: 'Poppins';
+    margin-bottom: 0%;
+  }
+
+  /* div{
+    
+    margin-right: 200px;
+  } */
+  
+  input[type="text"] {
+    width: 65%;
+    border: none;
+    border-bottom: 1px solid black;
+    padding: 5px;
+  }
+   
+
+  #username{
+    margin-top: 175px;
+  }
+
+  input[type="password"] {
+    width: 65%;
+    border: none;
+    border-bottom: 1px solid black;
+    margin-top: 40px;
+    padding: 5px;
+  }
+
+  input[type="submit"] {
+    width: 67%;
+    margin-top: 60px;
+    border: thin;
+    border-radius: 18px;
+    background-color: #cdaaf8;
+    height: 25px;
+    
+  }
