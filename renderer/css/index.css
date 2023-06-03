@@ -2,12 +2,19 @@ body{
     height: 100vh;
     margin: 0px;
     box-sizing: border-box;
+    padding-top: 60px;
 }
+#logout{
+    cursor: pointer;
+}
+.title-bar {
+    background-color: #FF0000; /* Replace with your desired background color */
+  }
 .mainScreen, .leftbar{
     height: 100%;
 }
 .leftbar{
-    width: 25%;
+    width: 20%;
     height: 100%;
     box-shadow: 1px 1px 5px 0px #CDAAF8;
     display: flex;
@@ -18,8 +25,11 @@ body{
 .colortext{
     color: #A262F3;
 }
+nav>div{
+    cursor: pointer;
+}
 .rightbar{
-    width: 75%;
+    width: 80%;
 }
 .mainScreen{
     display: flex;
@@ -101,6 +111,9 @@ input[type=file]{
     border-radius: 10px;
     border: none;
     margin-bottom: 1em;
+}
+.img{
+    width: 76%;
 }
 .head{
     color: #A262F3;

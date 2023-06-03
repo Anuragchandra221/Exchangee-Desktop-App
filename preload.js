@@ -7,6 +7,7 @@ const { contextBridge, ipcRenderer, ipcMain } = require('electron')
 
 contextBridge.exposeInMainWorld('server', {
   server: () => ipcRenderer.send('server'),
+  clients: ()=> ipcRenderer.send('client'),
   me: ()=> os.hostname(),
   getClient: async () => {
     return client()

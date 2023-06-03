@@ -3,6 +3,7 @@ document.getElementById('file-upload').addEventListener('change',(event)=>{
     server.files(file)
 })
 server.server()
+// server.clients()
 document.getElementById('me').innerHTML = server.me()
 const storage = async ()=>{
     const storage = await server.storage()
@@ -21,6 +22,12 @@ const client = async () => {
 
     // Perform actions with the client name
 };
+document.getElementById("username").innerHTML = localStorage.getItem("username")
+document.getElementById("logout").addEventListener('click',()=>{
+    localStorage.removeItem('username')
+    localStorage.removeItem('password')
+    window.location.href = "./exe.html"
+  })
 client()
 const speed = async ()=>{
     const speed = await server.speed((speed)=>{

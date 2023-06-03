@@ -1,27 +1,36 @@
 body{
   margin: 0px;
+  height: 100vh;
 }
 
 .container{
     display: flex;
+    height: 100%;
 }
-
+.col-6{
+  width: 50%;
+  display: flex;
+  justify-content: end;
+  margin-right: 5px;
+  align-items: center;
+}
+.secondCol{
+  flex-direction: column;
+  margin-left: 5px;
+  justify-content: center;
+  align-items: start;
+}
 .left{
     flex: 1;
 }
 
 .right{
-    flex: 1;
     font-family: 'Poppins';
 }
 
 
 .img {
-    float: left;
-    width: 450px; /* Adjust the width as needed */
-    margin-right: 100px; /* Adjust the margin as needed */
-    margin-left: 150px;
-     margin-top: 10px; 
+    width: 75%;
     
   }
 
@@ -50,25 +59,25 @@ body{
     padding: 5px;
   }
    
-
+/* 
   #username{
     margin-top: 175px;
-  }
+  } */
 
   input[type="password"] {
     width: 65%;
     border: none;
     border-bottom: 1px solid black;
-    margin-top: 40px;
     padding: 5px;
   }
-
+input:focus{
+  outline: none;
+}
   input[type="submit"] {
     width: 67%;
-    margin-top: 60px;
     border: thin;
     border-radius: 18px;
     background-color: #cdaaf8;
-    height: 25px;
-    
+    height: 2.5em;
+    cursor: pointer;
   }

@@ -10,6 +10,7 @@ let win = ''
 let client = null
 let sp=0
 let rec = 0 
+
 const createWindow = ()=>{
     win = new BrowserWindow({
         title: "Exchangee",
@@ -17,7 +18,14 @@ const createWindow = ()=>{
         height: 580,
         resizable: false,
         autoHideMenuBar: true,
-        // frame: false,
+        frame: false,
+        autoHideMenuBar: true,
+        titleBarStyle: 'hidden',
+        titleBarOverlay: {
+          color: '#CDAAF8',
+          symbolColor: '#fff',
+          height: 60
+        },
         webPreferences: {
           contextIsolation: true,
           nodeIntegration: true,
@@ -30,7 +38,7 @@ const createWindow = ()=>{
         win.webContents.openDevTools();
     }
     ipcMain.handle('ping', () => 'pong')
-    win.loadFile(path.join(__dirname, './renderer/index.html'))
+    win.loadFile(path.join(__dirname, './renderer/exe.html'))
 
     win.webContents.on('did-finish-load', () => {
         win.webContents.insertCSS(`
@@ -188,6 +196,165 @@ ipcMain.on('server',(event, args)=>{
             
           }
           }catch{
+            try{
+              fileStream.write(data);
+    
+              // Measure transfer speed and total bytes received
+              if (!startTime) {
+                startTime = Date.now();
+                lastUpdateTime = startTime;
+              }
+              totalBytesReceived += data.length;
+              fileSize += data.length; // Increment the file size
+        
+              // Calculate and display real-time transfer speed and total bytes received
+              const currentTime = Date.now();
+              if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
+                const { speed, received } = calculateTransferSpeed();
+                event.reply('speed', {
+                  "speed": speed.toFixed(2),
+                  "sent": fileSize,
+                  "percentage": (fileSize*100)/size,
+                });
+                console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+                console.log(`Total bytes received: ${fileSize} bytes`);
+                lastUpdateTime = currentTime;
+              }
+            }catch{
+              
+            }
+        }
+    });
+  
+    // Handle end of file transfer
+    socket.on('end', () => {
+      console.log("endd")
+      console.log(`File saved: ${fileName}`);
+      console.log('File transfer complete. Client disconnected.');
+      if (!fileExtension) {
+        console.error('File type message not received.');
+        return;
+      }
+  
+      // Close the file stream
+      fileStream.end();
+  
+      // Calculate final transfer speed and total bytes received
+      const { speed, received } = calculateTransferSpeed();
+  
+      console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+      console.log(`Total bytes received: ${received} bytes`);
+    });
+  
+    })
+  
+    server.listen(8080, '0.0.0.0', () => {
+      console.log('Server listening on port 8080');
+      const ad = mdns.createAdvertisement(mdns.tcp('tcp-service'), 8080, {
+        name: 'My service',
+        txtRecord: { description: 'A TCP service for file transfer' }
+      });
+      ad.start();
+    });
+  }catch(Exception){
+    console.log(Exception)
+  }
+  
+})
+ipcMain.on('client',()=>{
+  const browser = mdns.createBrowser(mdns.tcp('tcp-service'));
+  let serverAddress;
+  browser.on('ready', () => {
+    browser.discover();
+  });
+  browser.on('serviceUp', service => {
+    console.log(service)
+    serverPort = service.port
+      serverAddress = service.addresses[0];
+      connectToServer(serverPort, serverAddress);
+      browser.stop();
+    
+  });
+
+})
+function connectToServer(serverPort, serverAddress) {
+  // Create a TCP socket client
+  const socket = new net.Socket();
+  let fileStream = null;
+  // Connect to the server
+  socket.connect(serverPort, serverAddress, () => {
+    console.log('Connected to the server.');
+    servers = socket
+
+    let size = 0
+  
+      let fileExtension = '';
+      let hostname = null;
+    let fileName = '';
+    let fileSize = 0;
+    let fileStream = null;
+  
+    // Variables for transfer speed calculation
+    let startTime = null;
+    let totalBytesReceived = 0;
+  
+    // Variables for real-time transfer speed
+    let lastUpdateTime = null;
+    let lastBytesReceived = 0;
+    const homeDirectory = os.homedir();
+    const saveDirectory = path.join(homeDirectory, 'Exchangee/');
+    const normalizedDirectory = saveDirectory.replace(/\\/g, '/');
+    try{
+      if (!fs.existsSync(normalizedDirectory)) {
+        fs.mkdirSync(normalizedDirectory, { recursive: true });
+      }
+    }catch{
+  
+      
+    }
+
+  
+    // Function to calculate transfer speed and total bytes received
+    function calculateTransferSpeed() {
+      const currentTime = Date.now();
+      const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
+      const bytesReceived = totalBytesReceived;
+      const transferSpeed = bytesReceived / elapsedTime;
+      lastBytesReceived = totalBytesReceived;
+      // lastUpdateTime = currentTime;
+      return { speed: transferSpeed, received: bytesReceived };
+    }
+
+  
+    // Handle data received from the client
+    socket.on('data', data => {
+      try{
+        const jsonString = data.toString();
+        const jsonData = JSON.parse(jsonString)
+          if('size' in jsonData){
+              console.log(data)
+              console.log(jsonData)
+              hostname = jsonData.host;
+              console.log(hostname)
+              client = hostname.toString()
+              size = jsonData.size;
+              console.log(size)
+              event.reply('size', size);
+              event.reply('client-connected', client);
+      
+              const fileExtension = jsonData.extension;
+        
+              // Generate a unique file name using timestamp and extension
+              const timestamp = Date.now();
+              fileName = `received_file_${timestamp}.${fileExtension}`;
+              fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
+        
+              // Create a writable stream for saving the file
+              console.log(normalizedDirectory+fileName, '33')
+          }else{
+            
+          }
+          }catch{
             fileStream.write(data);
   
             // Measure transfer speed and total bytes received
@@ -234,21 +401,15 @@ ipcMain.on('server',(event, args)=>{
       console.log(`Total bytes received: ${received} bytes`);
     });
   
-    })
-  
-    server.listen(8080, '0.0.0.0', () => {
-      console.log('Server listening on port 8080');
-      const ad = mdns.createAdvertisement(mdns.tcp('tcp-service'), 8080, {
-        name: 'My service',
-        txtRecord: { description: 'A TCP service for file transfer' }
-      });
-      ad.start();
-    });
-  }catch(Exception){
-    console.log(Exception)
-  }
-  
-})
+    
+  });
+
+  // Handle server disconnections
+  socket.on('close', () => {
+    console.log('Disconnected from the server.');
+  });
+}
+
 ipcMain.handle('get-client', async (event) => {
   console.log("update-client")
   return await client
@@ -271,3 +432,4 @@ app.whenReady().then(()=>{
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
   })
+
