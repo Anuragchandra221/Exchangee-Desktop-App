@@ -9,6 +9,9 @@ let servers = null
 let win = ''
 let client = null
 let sp=0
+let sending = null
+let receiving = null
+let ended = 0
 let rec = 0 
 
 const createWindow = ()=>{
@@ -52,6 +55,8 @@ ipcMain.on('input-file', (event, fileName)=>{
   if(servers){
     console.log("server")
     const readStream = fs.createReadStream(fileName);
+    sending = true
+    receiving = false
     const stats = fs.statSync(fileName);
     const fileSizeInBytes = stats.size;
 
@@ -64,6 +69,7 @@ ipcMain.on('input-file', (event, fileName)=>{
       "extension": fileExtension,
       "size": fileSizeInBytes
     }
+    event.reply('size', fileSizeInBytes);
     const jsonString = JSON.stringify(data);
     servers.write(jsonString)
 
@@ -77,6 +83,15 @@ ipcMain.on('input-file', (event, fileName)=>{
       try{
         const jsonString = data.toString();
         JSON.parse(jsonString)
+        console.log("Ended ", ended)
+        // if(ended==1){
+        //   event.reply('speed', {
+        //     "speed": 0,
+        //     "sent": 0,
+        //     "percentage": 0,
+        //   });
+        //   ended = 0
+        // }
 
         if('speed' in JSON.parse(jsonString)){
           console.log(Number(JSON.parse(jsonString).speed), ' hi ')
@@ -115,6 +130,7 @@ ipcMain.on('input-file', (event, fileName)=>{
       
       // Display progress information
       console.log(`File sent: ${fileName}`);
+      ended = 1
 
     });
   }
@@ -197,7 +213,13 @@ ipcMain.on('server',(event, args)=>{
           }
           }catch{
             try{
-              fileStream.write(data);
+              try{
+                fileStream.write(data);
+                sending = false
+                receiving = true
+              }catch{
+
+              }
     
               // Measure transfer speed and total bytes received
               if (!startTime) {
@@ -209,16 +231,32 @@ ipcMain.on('server',(event, args)=>{
         
               // Calculate and display real-time transfer speed and total bytes received
               const currentTime = Date.now();
-              if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
-                const { speed, received } = calculateTransferSpeed();
+              if(ended==1){
                 event.reply('speed', {
-                  "speed": speed.toFixed(2),
-                  "sent": fileSize,
-                  "percentage": (fileSize*100)/size,
+                  "speed": 0,
+                  "sent": 0,
+                  "percentage": 0,
                 });
-                console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-                console.log(`Total bytes received: ${fileSize} bytes`);
-                lastUpdateTime = currentTime;
+                ended = 0
+              }
+              if(sending==false){
+                if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
+                  const { speed, received } = calculateTransferSpeed();
+                  event.reply('speed', {
+                    "speed": speed.toFixed(2),
+                    "sent": fileSize,
+                    "percentage": (fileSize*100)/size,
+                  });
+                  let sp = {
+                    "speed": speed,
+                    "sent": received
+                  }
+                  sp = JSON.stringify(sp)
+                  socket.write(sp)
+                  console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+                  console.log(`Total bytes received: ${fileSize} bytes`);
+                  lastUpdateTime = currentTime;
+                }
               }
             }catch{
               
@@ -238,6 +276,7 @@ ipcMain.on('server',(event, args)=>{
   
       // Close the file stream
       fileStream.end();
+      ended = 1
   
       // Calculate final transfer speed and total bytes received
       const { speed, received } = calculateTransferSpeed();
@@ -261,13 +300,13 @@ ipcMain.on('server',(event, args)=>{
   }
   
 })
-ipcMain.on('client',()=>{
+ipcMain.on('client',(event, args)=>{
   const browser = mdns.createBrowser(mdns.tcp('tcp-service'));
   let serverAddress;
   browser.on('ready', () => {
     browser.discover();
   });
-  browser.on('serviceUp', service => {
+  browser.on('update', service => {
     console.log(service)
     serverPort = service.port
       serverAddress = service.addresses[0];
@@ -276,139 +315,162 @@ ipcMain.on('client',()=>{
     
   });
 
-})
-function connectToServer(serverPort, serverAddress) {
-  // Create a TCP socket client
-  const socket = new net.Socket();
-  let fileStream = null;
-  // Connect to the server
-  socket.connect(serverPort, serverAddress, () => {
-    console.log('Connected to the server.');
-    servers = socket
-
-    let size = 0
-  
-      let fileExtension = '';
-      let hostname = null;
-    let fileName = '';
-    let fileSize = 0;
+  function connectToServer(serverPort, serverAddress) {
+    // Create a TCP socket client
+    const socket = new net.Socket();
     let fileStream = null;
+    // Connect to the server
+    socket.connect(serverPort, serverAddress, () => {
+      console.log('Connected to the server.');
+      servers = socket
   
-    // Variables for transfer speed calculation
-    let startTime = null;
-    let totalBytesReceived = 0;
-  
-    // Variables for real-time transfer speed
-    let lastUpdateTime = null;
-    let lastBytesReceived = 0;
-    const homeDirectory = os.homedir();
-    const saveDirectory = path.join(homeDirectory, 'Exchangee/');
-    const normalizedDirectory = saveDirectory.replace(/\\/g, '/');
-    try{
-      if (!fs.existsSync(normalizedDirectory)) {
-        fs.mkdirSync(normalizedDirectory, { recursive: true });
-      }
-    }catch{
-  
-      
-    }
-
-  
-    // Function to calculate transfer speed and total bytes received
-    function calculateTransferSpeed() {
-      const currentTime = Date.now();
-      const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
-      const bytesReceived = totalBytesReceived;
-      const transferSpeed = bytesReceived / elapsedTime;
-      lastBytesReceived = totalBytesReceived;
-      // lastUpdateTime = currentTime;
-      return { speed: transferSpeed, received: bytesReceived };
-    }
-
-  
-    // Handle data received from the client
-    socket.on('data', data => {
+      let size = 0
+    
+        let fileExtension = '';
+        let hostname = null;
+      let fileName = '';
+      let fileSize = 0;
+      let fileStream = null;
+    
+      // Variables for transfer speed calculation
+      let startTime = null;
+      let totalBytesReceived = 0;
+    
+      // Variables for real-time transfer speed
+      let lastUpdateTime = null;
+      let lastBytesReceived = 0;
+      const homeDirectory = os.homedir();
+      const saveDirectory = path.join(homeDirectory, 'Exchangee/');
+      const normalizedDirectory = saveDirectory.replace(/\\/g, '/');
       try{
-        const jsonString = data.toString();
-        const jsonData = JSON.parse(jsonString)
-          if('size' in jsonData){
-              console.log(data)
-              console.log(jsonData)
-              hostname = jsonData.host;
-              console.log(hostname)
-              client = hostname.toString()
-              size = jsonData.size;
-              console.log(size)
-              event.reply('size', size);
-              event.reply('client-connected', client);
-      
-              const fileExtension = jsonData.extension;
-        
-              // Generate a unique file name using timestamp and extension
-              const timestamp = Date.now();
-              fileName = `received_file_${timestamp}.${fileExtension}`;
-              fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
-        
-              // Create a writable stream for saving the file
-              console.log(normalizedDirectory+fileName, '33')
-          }else{
-            
-          }
-          }catch{
-            fileStream.write(data);
-  
-            // Measure transfer speed and total bytes received
-            if (!startTime) {
-              startTime = Date.now();
-              lastUpdateTime = startTime;
-            }
-            totalBytesReceived += data.length;
-            fileSize += data.length; // Increment the file size
-      
-            // Calculate and display real-time transfer speed and total bytes received
-            const currentTime = Date.now();
-            if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
-              const { speed, received } = calculateTransferSpeed();
-              event.reply('speed', {
-                "speed": speed.toFixed(2),
-                "sent": fileSize,
-                "percentage": (fileSize*100)/size,
-              });
-              console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-              console.log(`Total bytes received: ${fileSize} bytes`);
-              lastUpdateTime = currentTime;
-            }
+        if (!fs.existsSync(normalizedDirectory)) {
+          fs.mkdirSync(normalizedDirectory, { recursive: true });
         }
-    });
-  
-    // Handle end of file transfer
-    socket.on('end', () => {
-      console.log("endd")
-      console.log(`File saved: ${fileName}`);
-      console.log('File transfer complete. Client disconnected.');
-      if (!fileExtension) {
-        console.error('File type message not received.');
-        return;
+      }catch{
+    
+        
       }
-  
-      // Close the file stream
-      fileStream.end();
-  
-      // Calculate final transfer speed and total bytes received
-      const { speed, received } = calculateTransferSpeed();
-  
-      console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-      console.log(`Total bytes received: ${received} bytes`);
-    });
   
     
-  });
-
-  // Handle server disconnections
-  socket.on('close', () => {
-    console.log('Disconnected from the server.');
-  });
-}
+      // Function to calculate transfer speed and total bytes received
+      function calculateTransferSpeed() {
+        const currentTime = Date.now();
+        const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
+        const bytesReceived = totalBytesReceived;
+        const transferSpeed = bytesReceived / elapsedTime;
+        lastBytesReceived = totalBytesReceived;
+        // lastUpdateTime = currentTime;
+        return { speed: transferSpeed, received: bytesReceived };
+      }
+  
+    
+      // Handle data received from the client
+      socket.on('data', data => {
+        try{
+          const jsonString = data.toString();
+          const jsonData = JSON.parse(jsonString)
+            if('size' in jsonData){
+                console.log(data)
+                console.log(jsonData)
+                hostname = jsonData.host;
+                console.log(hostname)
+                client = hostname.toString()
+                size = jsonData.size;
+                console.log(size)
+                event.reply('size', size);
+                event.reply('client-connected', client);
+        
+                const fileExtension = jsonData.extension;
+          
+                // Generate a unique file name using timestamp and extension
+                const timestamp = Date.now();
+                fileName = `received_file_${timestamp}.${fileExtension}`;
+                fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
+          
+                // Create a writable stream for saving the file
+                console.log(normalizedDirectory+fileName, '33')
+            }else{
+              
+            }
+            }catch{
+              try{
+                fileStream.write(data);
+                sending = false
+                receiving = true
+              }catch{
+  
+              }
+    
+              // Measure transfer speed and total bytes received
+              if(sending==false){
+                if (!startTime) {
+                  startTime = Date.now();
+                  lastUpdateTime = startTime;
+                }
+                totalBytesReceived += data.length;
+                fileSize += data.length; // Increment the file size
+                if(ended==1){
+                  event.reply('speed', {
+                    "speed": 0,
+                    "sent": 0,
+                    "percentage": 0,
+                  });
+                  ended = 0
+                }
+          
+                // Calculate and display real-time transfer speed and total bytes received
+                const currentTime = Date.now();
+                if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
+                  const { speed, received } = calculateTransferSpeed();
+                  event.reply('speed', {
+                    "speed": speed.toFixed(2),
+                    "sent": fileSize,
+                    "percentage": (fileSize*100)/size,
+                  });
+                  let sp = {
+                    "speed": speed,
+                    "sent": received
+                  }
+                  sp = JSON.stringify(sp)
+                  socket.write(sp)
+                  console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+                  console.log(`Total bytes received: ${fileSize} bytes`);
+                  lastUpdateTime = currentTime;
+                }
+              }
+          }
+      });
+    
+      // Handle end of file transfer
+      socket.on('end', () => {
+        console.log("endd")
+        console.log(`File saved: ${fileName}`);
+        console.log('File transfer complete. Client disconnected.');
+        if (!fileExtension) {
+          console.error('File type message not received.');
+          return;
+        }
+    
+        // Close the file stream
+        fileStream.end();
+        ended = 1
+    
+        // Calculate final transfer speed and total bytes received
+        const { speed, received } = calculateTransferSpeed();
+    
+        console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+        console.log(`Total bytes received: ${received} bytes`);
+      });
+    
+      
+    });
+  
+    // Handle server disconnections
+    socket.on('close', () => {
+      console.log('Disconnected from the server.');
+    });
+  }
+})
 
 ipcMain.handle('get-client', async (event) => {
   console.log("update-client")
