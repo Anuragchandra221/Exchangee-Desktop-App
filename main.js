@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain, ipcRenderer} = require('electron')
+const {app, BrowserWindow, ipcMain, ipcRenderer, dialog} = require('electron')
 const path = require('path')
 const isDev = process.env.NODE_ENV !== "development"
 const net = require('net');
@@ -52,6 +52,18 @@ const createWindow = ()=>{
         `);
       });
 }
+ipcMain.on('select-folder', async (event) => {
+  try {
+    const result = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory'],
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      event.reply('folder-selected', result.filePaths[0]);
+    }
+  } catch (error) {
+    console.log('Error selecting folder:', error);
+  }
+});
 ipcMain.on('input-file', (event, fileName)=>{
   if(servers){
     const readStream = fs.createReadStream(fileName);
@@ -310,6 +322,7 @@ ipcMain.on('server',(event, args)=>{
   
 })
 ipcMain.on('client',(event, args)=>{
+  console.log("Clinet ")
   const browser = mdns.createBrowser(mdns.tcp('tcp-service'));
   let serverAddress;
   browser.on('ready', () => {
@@ -319,7 +332,10 @@ ipcMain.on('client',(event, args)=>{
     console.log(service)
     serverPort = service.port
       serverAddress = service.addresses[0];
-      connectToServer(serverPort, serverAddress);
+      if(!serverPort){ 
+        serverPort = 8080
+      }
+      connectToServer(serverPort, serverAddress); 
       browser.stop();
     
   });

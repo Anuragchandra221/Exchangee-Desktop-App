@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <title>Exchangee</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel = "stylesheet" 
+    href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body>
+    <div class="mainScreen">
+        <div class="leftbar py-2 ps-3">
+          <div>
+            <img src="./assets/logo.png" class="img mt-3" alt="">
+            <nav class="navbars mt-4">
+              <div class="mb-3 bold"><a href="index.html">Home</a></div>
+              <div class="mb-3 bold">Transfer Centre</div>
+              <div class="mb-3 bold active">Settings</div>
+            </nav>
+          </div>
+          <div id="logout" class="bold">
+            Logout
+          </div>
+        </div>
+        <div class="rightbar p-2 px-4 d-flex flex-column justify-content-start mt-3">
+          <div class="mt-1">
+            <h5 class="heading-violet">Choose destination path</h5>
+            <div class="text-right mt-2">
+                <button class="browse" id="browse">Browse</button>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <h5 class="heading-violet">Act as</h5>
+            <input type="radio" id="radio-server" name="role" value="radio-server">
+            <label for="radio-server">Server</label><br>
+            <input type="radio" id="radio-client" name="role" value="radio-client">
+            <label for="radio-client">Client</label><br>
+          </div>
+
+          <div class="mt-4">
+            <h5 class="heading-violet">
+                For Seamless Connection
+            </h5>
+            <ul>
+                <li>It is advised to turn off firewall for the Exchangee App</li>
+                <li>Also make sure to make the wifi discoverable</li>
+            </ul>
+          </div>
+          
+        </div>
+      </div>
+      <script src="./settings.js"></script>
+</body>
+</html>

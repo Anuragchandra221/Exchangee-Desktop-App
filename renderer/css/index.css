@@ -22,6 +22,17 @@ body{
     z-index: 2;
     justify-content: space-between;
 }
+.browse{
+    background-color: #CDAAF8;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    height: 2em;
+}
+.heading-violet{
+    color: #A262F3;
+    font-weight: bold;
+}
 .colortext{
     color: #A262F3;
 }
@@ -33,6 +44,10 @@ nav>div{
 }
 .mainScreen{
     display: flex;
+}
+a{
+    text-decoration: none !important;
+    color: #000 !important;
 }
 header{
     padding-inline: 30px;
@@ -126,7 +141,7 @@ input[type=file]{
     border: none;
 }
 .active{
-    color: #CDAAF8;
+    color: #CDAAF8 !important;
 }
 .stats{
     border: 2px solid #CDAAF8;

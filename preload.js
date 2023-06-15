@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os')
 const ds = require('check-disk-space')
+const { dialog } = require('electron');
 
 
 const { contextBridge, ipcRenderer, ipcMain } = require('electron')
@@ -19,8 +20,28 @@ contextBridge.exposeInMainWorld('server', {
     return size()
   },
   storage: async ()=>{return diskSpace()},
-  files: (file)=>{handleFiles(file)}
+  files: (file)=>{handleFiles(file)},
+  selectFolder: () => {
+    return new Promise((resolve, reject) => {
+      ipcRenderer.once('folder-selected', (event, folderPath) => {
+        console.log(folderPath)
+        resolve(folderPath);
+      });
+      ipcRenderer.send('select-folder');
+    });
+  }
 })
+async function select(){
+    dialog.showOpenDialog({
+      properties: ['openDirectory']
+    }).then(result => {
+      return result
+      const folderPath = result.filePaths[0];
+      console.log('Selected folder:', folderPath);
+    }).catch(err => {
+      console.log('Error selecting folder:', err);
+    });
+}
 async function client(){
   return new Promise((resolve, reject) => {
     ipcRenderer.once('client-connected', (event, clientName) => {
