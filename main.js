@@ -12,6 +12,7 @@ let sp=0
 let sending = null
 let receiving = null
 let ended = 0
+let normalizedDirectory = null
 let rec = 0 
 
 const createWindow = ()=>{
@@ -53,7 +54,6 @@ const createWindow = ()=>{
 }
 ipcMain.on('input-file', (event, fileName)=>{
   if(servers){
-    console.log("server")
     const readStream = fs.createReadStream(fileName);
     sending = true
     receiving = false
@@ -140,6 +140,16 @@ ipcMain.on('server',(event, args)=>{
   try{
     const server = net.createServer(socket=>{
       servers = socket
+      // let data = {
+      //   "host": 'host',
+      //   "extension": 'fileExtension',
+      //   "size": 'fileSizeInBytes'
+      // }
+      // const jsonString = JSON.stringify(data);
+      // servers.write(jsonString)
+      // socket.write(jsonString)
+      // servers.write("HIH")
+      console.log("server is socket")
 
       console.log("Client Connected")
       console.log(socket.bufferSize)
@@ -217,8 +227,8 @@ ipcMain.on('server',(event, args)=>{
                 fileStream.write(data);
                 sending = false
                 receiving = true
-              }catch{
-
+              }catch(err){
+                    console.log("Could not write file", err.message)
               }
     
               // Measure transfer speed and total bytes received
@@ -239,24 +249,23 @@ ipcMain.on('server',(event, args)=>{
               //   });
               //   ended = 0
               // }
-              if(sending==true){
-                if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
-                  const { speed, received } = calculateTransferSpeed();
-                  event.reply('speed', {
-                    "speed": speed.toFixed(2),
-                    "sent": fileSize,
-                    "percentage": (fileSize*100)/size,
-                  });
-                  let sp = {
-                    "speed": speed,
-                    "sent": received
-                  }
-                  sp = JSON.stringify(sp)
-                  socket.write(sp)
-                  console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-                  console.log(`Total bytes received: ${fileSize} bytes`);
-                  lastUpdateTime = currentTime;
+              if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
+                const { speed, received } = calculateTransferSpeed();
+                console.log((speed/(1024*1024)).toFixed(2), fileSize, size,  (fileSize*100)/size)
+                event.reply('speed', {
+                  "speed": speed.toFixed(2),
+                  "sent": fileSize,
+                  "percentage": (fileSize*100)/size,
+                });
+                let sp = {
+                  "speed": speed,
+                  "sent": received
                 }
+                sp = JSON.stringify(sp)
+                socket.write(sp)
+                console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+                console.log(`Total bytes received: ${fileSize} bytes`);
+                lastUpdateTime = currentTime;
               }
             }catch{
               
@@ -340,15 +349,19 @@ ipcMain.on('client',(event, args)=>{
       let lastUpdateTime = null;
       let lastBytesReceived = 0;
       const homeDirectory = os.homedir();
-      const saveDirectory = path.join(homeDirectory, 'Exchangee/');
-      const normalizedDirectory = saveDirectory.replace(/\\/g, '/');
       try{
-        if (!fs.existsSync(normalizedDirectory)) {
-          fs.mkdirSync(normalizedDirectory, { recursive: true });
+        const saveDirectory = path.join(homeDirectory, 'Exchangee/');
+        normalizedDirectory = saveDirectory.replace(/\\/g, '/');
+        try{
+          if (!fs.existsSync(normalizedDirectory)) {
+            fs.mkdirSync(normalizedDirectory, { recursive: true });
+          }
+        }catch{
+          console.log("Can't open directory")
+          
         }
       }catch{
-    
-        
+        console.log("Directory creation failed")
       }
   
     
@@ -364,74 +377,97 @@ ipcMain.on('client',(event, args)=>{
       }
 
       socket.on('data', data => {
-        if(!hostname){
-          try{
-            const jsonString = data.toString();
-            console.log(JSON.parse(jsonString))
-            hostname = JSON.parse(jsonString).host;
-            console.log(hostname)
-            client = hostname.toString()
-            size = JSON.parse(jsonString).size;
-            console.log(size)
-            event.reply('size', size);
-                event.reply('client-connected', client);
-      
-              // The first message received is the file type message
-              const jsonString2 = data.toString();
-              const fileExtension = JSON.parse(jsonString2).extension;
-        
-              // Generate a unique file name using timestamp and extension
-              const timestamp = Date.now();
-              fileName = `received_file_${timestamp}.${fileExtension}`;
-        
-              // Create a writable stream for saving the file
-              console.log(normalizedDirectory+fileName)
-          }catch(err){
-            try {
-              socket.destroy();
-              console.log(err)
-              // startSocket();
-              console.log('Socket restarted successfully.');
-            } catch (error) {
-              console.error('Error restarting socket:', error);
-            }
-          }
+        // console.log("data flowing")
+        try{
+          const jsonString = data.toString();
+           const jsonData = JSON.parse(jsonString)
+          if('size' in jsonData){
             try{
-              fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
-            }catch{
-              console.log("Cannot access folder")
+              console.log(JSON.parse(jsonString))
+              hostname = JSON.parse(jsonString).host;
+              console.log(hostname)
+              client = hostname.toString()
+              size = JSON.parse(jsonString).size;
+              console.log(size)
+              event.reply('size', size);
+                  event.reply('client-connected', client);
+        
+                // The first message received is the file type message
+                const jsonString2 = data.toString();
+                const fileExtension = JSON.parse(jsonString2).extension;
+          
+                // Generate a unique file name using timestamp and extension
+                const timestamp = Date.now();
+                fileName = `received_file_${timestamp}.${fileExtension}`;
+                console.log("normalized directory", normalizedDirectory)
+                fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
+          
+                // Create a writable stream for saving the file
+                console.log(normalizedDirectory+fileName)
+            }catch(err){
+              try {
+                socket.destroy();
+                console.log(err)
+                // startSocket();
+                console.log('Socket restarted successfully.');
+              } catch (error) {
+                console.error('Error restarting socket:', error);
+              }
             }
-        }else {
+              
+          }else {
+          }
+        }catch{
           // Write the received data to the file stream
-          fileStream.write(data);
+          try{
+            // if(i==0){
+            //   try{
+            //     console.log("HIHIHIHi3")
+            //     console.log(normalizedDirectory+fileName)
+            //     fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
+            //     i++;
+            //     console.log("HIHIHI")
+            //   }catch{
+            //     console.log("Cannot access folder")
+            //   }
+            // }
+            try{
+              fileStream.write(data);
+            }catch(err){
+              console.log("could not write file")
+            }
+            if (!startTime) {
+              startTime = Date.now();
+              lastUpdateTime = startTime;
+            }
+            totalBytesReceived += data.length;
+            fileSize += data.length; // Increment the file size
+      
+            // Calculate and display real-time transfer speed and total bytes received
+            const currentTime = Date.now();
+            if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
+              const { speed, received } = calculateTransferSpeed();
+              event.reply('speed', {
+                "speed": speed.toFixed(2),
+                "sent": fileSize,
+                "percentage": (fileSize*100)/size,
+              });
+              const sp = {
+                "speed":speed,
+                "sent": received,
+                "host": os.hostname(),
+              }
+              socket.write(JSON.stringify(sp))
+              // console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+              // console.log(`Total bytes received: ${fileSize} bytes`);
+              lastUpdateTime = currentTime;
+            }
+          }catch{
+
+          }
     
           // Measure transfer speed and total bytes received
-          if (!startTime) {
-            startTime = Date.now();
-            lastUpdateTime = startTime;
-          }
-          totalBytesReceived += data.length;
-          fileSize += data.length; // Increment the file size
-    
-          // Calculate and display real-time transfer speed and total bytes received
-          const currentTime = Date.now();
-          if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
-            const { speed, received } = calculateTransferSpeed();
-            event.reply('speed', {
-              "speed": speed.toFixed(2),
-              "sent": fileSize,
-              "percentage": (fileSize*100)/size,
-            });
-            const sp = {
-              "speed":speed,
-              "sent": received,
-              "host": os.hostname(),
-            }
-            socket.write(JSON.stringify(sp))
-            console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-            console.log(`Total bytes received: ${fileSize} bytes`);
-            lastUpdateTime = currentTime;
-          }
+
         }
       });
   
