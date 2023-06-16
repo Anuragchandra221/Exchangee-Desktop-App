@@ -13,6 +13,9 @@ body{
 .mainScreen, .leftbar{
     height: 100%;
 }
+#destination_path{
+    color: #565656;
+}
 .leftbar{
     width: 20%;
     height: 100%;

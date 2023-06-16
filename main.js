@@ -322,7 +322,7 @@ ipcMain.on('server',(event, args)=>{
   
 })
 ipcMain.on('client',(event, args)=>{
-  console.log("Clinet ")
+  console.log("Client ")
   const browser = mdns.createBrowser(mdns.tcp('tcp-service'));
   let serverAddress;
   browser.on('ready', () => {

@@ -24,8 +24,9 @@ contextBridge.exposeInMainWorld('server', {
   selectFolder: () => {
     return new Promise((resolve, reject) => {
       ipcRenderer.once('folder-selected', (event, folderPath) => {
-        console.log(folderPath)
-        resolve(folderPath);
+        console.log(folderPath.replace(/\\/g, '/'))
+        // return folderPath
+        resolve(folderPath.replace(/\\/g, '/')+'/');
       });
       ipcRenderer.send('select-folder');
     });

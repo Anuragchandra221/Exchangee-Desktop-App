@@ -3,8 +3,11 @@ document.getElementById('file-upload').addEventListener('change',(event)=>{
     const file = event.target.files[0].path.replace(/\\/g, '/')
     server.files(file)
 })
-// server.server()
-server.clients()
+if(localStorage.getItem('role')=='server'){
+    server.server()
+}else{
+    server.clients()
+}
 
 document.getElementById('me').innerHTML = server.me()
 const storage = async ()=>{
@@ -24,6 +27,7 @@ const client = async () => {
 
     // Perform actions with the client name
 };
+
 document.getElementById("username").innerHTML = localStorage.getItem("username")
 document.getElementById("logout").addEventListener('click',()=>{
     localStorage.removeItem('username')
