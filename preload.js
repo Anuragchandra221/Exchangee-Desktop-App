@@ -30,6 +30,9 @@ contextBridge.exposeInMainWorld('server', {
       });
       ipcRenderer.send('select-folder');
     });
+  },
+  web: (file)=>{
+    ipcRenderer.send('web',file)
   }
 })
 async function select(){

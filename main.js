@@ -5,6 +5,7 @@ const net = require('net');
 const fs = require('fs');
 const mdns = require('mdns-js');
 const os = require('os')
+const { WebSocket } = require('ws');
 let servers = null
 let win = ''
 let client = null
@@ -394,6 +395,7 @@ ipcMain.on('client',(event, args)=>{
 
       socket.on('data', data => {
         // console.log("data flowing")
+        console.log(typeof(data))
         try{
           const jsonString = data.toString();
            const jsonData = JSON.parse(jsonString)
@@ -537,9 +539,48 @@ app.whenReady().then(()=>{
       })
 })
 
+let url = `ws://127.0.0.1:8000/ws/socket-server/`
+const chatSocket = new WebSocket(url)
+
+let saveDirectory = null
+try{
+  saveDirectory = path.join(os.homedir(), 'Exchangee/');
+  normalizedDirectory = saveDirectory.replace(/\\/g, '/');
+  try{
+    if (!fs.existsSync(normalizedDirectory)) {
+      fs.mkdirSync(normalizedDirectory, { recursive: true });
+    }
+  }catch{
+    console.log("Can't open directory")
+    
+  }
+}catch{
+  console.log("Directory creation failed")
+}
+let fileName = 'anurag.jpg'
+let fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
+chatSocket.onmessage = function(e){
+        // let data = JSON.parse(e.data)
+        console.log("Data: ", e.data)
+        console.log(typeof(e.data))
+        const bufferData = Buffer.from(e.data, 'binary');
+        // fileStream.write(e.data)
+        fs.appendFile(normalizedDirectory+fileName, e.data, function(err) {
+            if (err) {
+                console.error('Error writing file:', err);
+            } else {
+                console.log('File written successfully!');
+            }
+        });
+        console.log(normalizedDirectory)
+    }
+
+ipcMain.on('web',(event, chunks)=>{
+  // console.log("web", chunks)
+  chatSocket.send(chunks)
+})
 
 // when all windows are closed
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit()
   })
-
