@@ -7,6 +7,7 @@ if(localStorage.getItem("username")&&localStorage.getItem('password')){
         if(username && password){
             localStorage.setItem("username", username)
             localStorage.setItem("password", password)
+            localStorage.setItem("role", "server")
             console.log("success")
             window.location.href = './index.html';
         }
