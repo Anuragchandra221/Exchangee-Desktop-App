@@ -8,7 +8,9 @@ if(localStorage.getItem("username")&&localStorage.getItem('password')){
             localStorage.setItem("username", username)
             localStorage.setItem("password", password)
             localStorage.setItem("role", "server")
+            localStorage.setItem("server-running", 'false')
             console.log("success")
+            server.server()
             window.location.href = './index.html';
         }
     })

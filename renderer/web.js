@@ -1,5 +1,5 @@
 let form = document.getElementById('form')
-const fileInput = document.getElementById('file-input');
+const fileInput = document.getElementById('file-upload');
 let file = null
 let fileExtension = null
 fileInput.addEventListener('change',(e)=>{
@@ -8,8 +8,12 @@ fileInput.addEventListener('change',(e)=>{
     fileExtension = file.name.split('.').pop();
     // console.log(fileExtension)
 })
-form.addEventListener('submit', (e)=>{
-    e.preventDefault()
+server.startWeb()
+document.getElementById('file-upload').addEventListener('change', (e)=>{
+    // e.preventDefault()
+    file = e.target.files[0]
+    document.getElementById('file_name').innerHTML = file.name
+    document.getElementById('speedtext').innerHTML = 'Speed :'
     if (file) {
         const chunkSize = 1048576; // Adjust the chunk size as needed
         let offset = 0;

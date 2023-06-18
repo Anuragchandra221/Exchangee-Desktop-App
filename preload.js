@@ -39,6 +39,9 @@ contextBridge.exposeInMainWorld('server', {
   },
   webExtension: (fileExtension, size)=>{
     ipcRenderer.send("web-extension", fileExtension, size)
+  },
+  startWeb: ()=>{
+    ipcRenderer.send('startWeb')
   }
 })
 async function select(){

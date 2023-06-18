@@ -3,6 +3,11 @@ body{
     margin: 0px;
     box-sizing: border-box;
     padding-top: 60px;
+    /* position: relative; */
+    /* -webkit-app-region: drag; */
+}
+.titlebar{
+    background-color: #000;
 }
 #logout{
     cursor: pointer;
@@ -41,6 +46,14 @@ body{
 }
 nav>div{
     cursor: pointer;
+}
+.web-div{
+    width: 40%;
+}
+.back_button{
+    position: absolute;
+    top: 65px;
+    left: 13px;
 }
 .rightbar{
     width: 80%;

@@ -3,10 +3,18 @@ document.getElementById('file-upload').addEventListener('change',(event)=>{
     const file = event.target.files[0].path.replace(/\\/g, '/')
     server.files(file)
 })
-if(localStorage.getItem('role')=='server'){
-    server.server()
-}else{
-    server.clients()
+console.log(localStorage.getItem('server-running'))
+if(localStorage.getItem('server-running')==='false'){
+    console.log("hihhihihihihihihi")
+    if(localStorage.getItem('role')=='server'){
+        console.log("serier")
+        server.server()
+        localStorage.setItem("server-running", 'true')
+    }else if(localStorage.getItem('role')=='client'){
+        console.log("client hfer")
+        server.clients()
+        localStorage.setItem("server-running", 'false')
+    }
 }
 
 document.getElementById('me').innerHTML = server.me()

@@ -4,18 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel = "stylesheet" 
+    href = "../bower_components/bootstrap/dist/css/bootstrap.min.css" />
 </head>
-<body>
-    <form action="" id="form">
-        <input type="text" name="input" />
-        <input type="file" name="" id="file-input">
-        <input type="submit" value="send">
-    </form>
-    <div class="p-2">
-        <p class="mb-1"><span class="colortext">Speed</span>: <span id="speed"></span></p>
-        <p><span id="received"></span><span id="total"></span></p>
+<body class="d-flex">
+    <div class="leftbar py-2 ps-3">
+        <div>
+          <img src="./assets/logo.png" class="img mt-3" alt="">
+          <nav class="navbars mt-4">
+            <div class="mb-3 bold"><a href="index.html">Home</a></div>
+            <div class="mb-3 bold">Transfer Centre</div>
+            <div class="mb-3 bold"><a href="settings.html">Settings</a></div>
+          </nav>
+        </div>
+        <div id="logout" class="bold">
+          Logout
+        </div>
       </div>
-    <progress class="mb-2" id="progress-bar" value="0" max="100"></progress>
+    <div class=" rightbar d-flex align-items-center justify-content-center">
+        <div class=" web-div d-flex flex-column">
+            <form action="" id="form">
+                <label for="file-upload" class="btnmain mb-0 bold d-flex align-items-center justify-content-center">
+                    Send
+                </label>
+                <input id="file-upload" type="file"/><br/>
+                <!-- <input type="submit" value="send"> -->
+            </form>
+            <div class="p-2">
+                <div class="details">
+                    <div class="p-2">
+                        <p id="file_name"></p>
+                    </div>
+                    <div class="p-2">
+                      <p class="mb-1"><span class="colortext" id="speedtext"></span><span id="speed"></span></p>
+                      <p><span id="received"></span><span id="total"></span></p>
+                    </div>
+                  </div>
+                
+              </div>
+            <progress class="mb-2" id="progress-bar" value="0" max="100"></progress>
+        </div>
+    </div>
     <script src="./web.js"></script>
 </body>
 </html>

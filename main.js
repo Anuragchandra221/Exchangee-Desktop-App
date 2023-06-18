@@ -309,9 +309,9 @@ ipcMain.on('server',(event, args)=>{
   
     })
   
-    server.listen(8080, '0.0.0.0', () => {
-      console.log('Server listening on port 8080');
-      const ad = mdns.createAdvertisement(mdns.tcp('tcp-service'), 8080, {
+    server.listen(3000, '0.0.0.0', () => {
+      console.log('Server listening on port 3000');
+      const ad = mdns.createAdvertisement(mdns.tcp('tcp-service'), 3000, {
         name: 'My service',
         txtRecord: { description: 'A TCP service for file transfer' }
       });
@@ -564,72 +564,84 @@ let lastBytesReceived = null
 let totalBytesReceived = null
 let fileSize = 0
 let totalSize = 0
+let sender = 0
+ipcMain.on('startWeb',(event, args)=>{
+  chatSocket.onmessage = function(e){
+    // console.log(e.data)
+    // let data = JSON.parse(e.data)
+    // console.log(typeof(e.data))
+    function calculateTransferSpeed() {
+      const currentTime = Date.now();
+      const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
+      const bytesReceived = totalBytesReceived;
+      const transferSpeed = bytesReceived / elapsedTime;
+      lastBytesReceived = totalBytesReceived;
+      // lastUpdateTime = currentTime;
+      return { speed: transferSpeed, received: bytesReceived };
+    }
+    if(sender==0){
+      try{
+        // console.log('e',e.data)
+        // startTime = Date.now();
+        const jsonData = JSON.parse(e.data)
+        // console.log(jsonData,'e')
+        if(jsonData.type=="extension"){
+          fileName = jsonData.message.name
+          totalSize = jsonData.message.size
+          console.log(jsonData)
+          // console.log(normalizedDirectory+fileName,)
+          fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
+        }
+      }catch{
+        // console.log("Data: ", e.data)
+        // console.log(typeof(e.data))
+          const bufferData = Buffer.from(e.data, 'binary');
+          // fileStream.write(e.data)
+          fs.appendFile(normalizedDirectory+fileName, e.data, function(err) {
+              if (err) {
+                  // console.error('Error writing file:', err);
+              } else {
+                  // console.log('File written successfully!');
+              }
+          });
+      
+          if (!startTime) {
+            startTime = Date.now();
+            lastUpdateTime = startTime;
+          }
+          totalBytesReceived += e.data.length;
+          fileSize += e.data.length; // Increment the file size
+      
+          // Calculate and display real-time transfer speed and total bytes received
+          const currentTime = Date.now();
+          if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
+            const { speed, received } = calculateTransferSpeed();
+            console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+            console.log(`Total bytes received: ${fileSize} bytes`);
+            
+            event.reply('speed-web', {
+              "speed": speed.toFixed(2),
+              "sent": fileSize,
+              "percentage": (fileSize*100)/totalSize,
+            });
+            lastUpdateTime = currentTime;
+          }
+        
+      }
+    }
+    
+  }
+})
+
 ipcMain.on('web-extension', (event, name, size)=>{
+  // servers.destroy()
   console.log("webextension", size)
+  sender = 1
   chatSocket.send(JSON.stringify({
     "name": name,
     "size": size
   }))
-  chatSocket.onmessage = function(e){
-          // let data = JSON.parse(e.data)
-          // console.log(typeof(e.data))
-          function calculateTransferSpeed() {
-            const currentTime = Date.now();
-            const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
-            const bytesReceived = totalBytesReceived;
-            const transferSpeed = bytesReceived / elapsedTime;
-            lastBytesReceived = totalBytesReceived;
-            // lastUpdateTime = currentTime;
-            return { speed: transferSpeed, received: bytesReceived };
-          }
-          try{
-            // console.log('e',e.data)
-            // startTime = Date.now();
-            const jsonData = JSON.parse(e.data)
-            // console.log(jsonData,'e')
-            if(jsonData.type=="extension"){
-              fileName = jsonData.message.name
-              totalSize = jsonData.message.size
-              console.log(jsonData)
-              // console.log(normalizedDirectory+fileName,)
-              fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
-            }
-          }catch{
-            // console.log("Data: ", e.data)
-            // console.log(typeof(e.data))
-            const bufferData = Buffer.from(e.data, 'binary');
-            // fileStream.write(e.data)
-            fs.appendFile(normalizedDirectory+fileName, e.data, function(err) {
-                if (err) {
-                    // console.error('Error writing file:', err);
-                } else {
-                    // console.log('File written successfully!');
-                }
-            });
   
-            if (!startTime) {
-              startTime = Date.now();
-              lastUpdateTime = startTime;
-            }
-            totalBytesReceived += e.data.length;
-            fileSize += e.data.length; // Increment the file size
-      
-            // Calculate and display real-time transfer speed and total bytes received
-            const currentTime = Date.now();
-            if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
-              const { speed, received } = calculateTransferSpeed();
-              console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-              console.log(`Total bytes received: ${fileSize} bytes`);
-              
-              event.reply('speed-web', {
-                "speed": speed.toFixed(2),
-                "sent": fileSize,
-                "percentage": (fileSize*100)/totalSize,
-              });
-              lastUpdateTime = currentTime;
-            }
-          }
-      }
 })
 ipcMain.on('web',(event, chunks)=>{
   // console.log("web", chunks)
