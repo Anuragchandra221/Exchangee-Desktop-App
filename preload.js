@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('server', {
   speed: async (callback)=>{
     return speed(callback)
   },
+  webSpeed: async (callback)=>{
+    return webSpeed(callback)
+  },
   size: async ()=>{
     return size()
   },
@@ -33,6 +36,9 @@ contextBridge.exposeInMainWorld('server', {
   },
   web: (file)=>{
     ipcRenderer.send('web',file)
+  },
+  webExtension: (fileExtension, size)=>{
+    ipcRenderer.send("web-extension", fileExtension, size)
   }
 })
 async function select(){
@@ -61,6 +67,16 @@ async function speed(callback){
       resolve(speed);
       callback(speed)
     });
+  })
+}
+
+async function webSpeed(callback){
+  return new Promise((resolve, reject)=>{
+    ipcRenderer.on('speed-web', (event, speed)=>{
+      console.log(speed)
+      resolve(speed)
+      callback(speed)
+    })
   })
 }
 
