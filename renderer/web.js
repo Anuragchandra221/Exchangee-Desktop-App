@@ -56,3 +56,8 @@ const speed = async ()=>{
     });
 }
 speed()
+const size = async ()=>{
+    const size = await server.size()
+    document.getElementById('total').innerHTML = (size/(1024*1024)).toFixed(2)+" MB"
+}
+size()

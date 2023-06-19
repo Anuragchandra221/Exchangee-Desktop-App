@@ -5,6 +5,7 @@ const net = require('net');
 const fs = require('fs');
 const mdns = require('mdns-js');
 const os = require('os')
+const { localStorage } = require('electron-browser-storage');
 const { WebSocket } = require('ws');
 let servers = null
 let win = ''
@@ -13,8 +14,10 @@ let sp=0
 let sending = null
 let receiving = null
 let ended = 0
+let advertisement = null
 let normalizedDirectory = null
 let rec = 0 
+let globalServer = null
 
 const createWindow = ()=>{
     win = new BrowserWindow({
@@ -46,6 +49,10 @@ const createWindow = ()=>{
     win.loadFile(path.join(__dirname, './renderer/exe.html'))
 
     win.webContents.on('did-finish-load', () => {
+       
+      // async function removeSt (){
+      // }
+      // removeSt()
         win.webContents.insertCSS(`
           .title-bar {
             background-color: #CDAAF8; 
@@ -148,11 +155,43 @@ ipcMain.on('input-file', (event, fileName)=>{
     });
   }
 })
+function getDeviceIPAddress() {
+  const networkInterfaces = os.networkInterfaces();
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    for (const iface of interfaces) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return null;
+}
+ipcMain.on('destroy-socket',async (event, args)=>{
+  // console.log("Destroyed socket", servers)
+  servers = await servers
+  if(servers){
+
+    servers.destroy()
+  }
+})
 ipcMain.on('server',(event, args)=>{
   console.log("hihi")
+  if(servers){
+
+    servers.destroy()
+  }
+  if(advertisement){
+    advertisement.stop()
+  }
+  if(globalServer){
+    globalServer.close(()=>{
+      console.log("server closed")
+    })
+  }
   try{
     const server = net.createServer(socket=>{
-      servers = socket
+      
       // let data = {
       //   "host": 'host',
       //   "extension": 'fileExtension',
@@ -204,21 +243,24 @@ ipcMain.on('server',(event, args)=>{
       // lastUpdateTime = currentTime;
       return { speed: transferSpeed, received: bytesReceived };
     }
+    
+   
 
   
     // Handle data received from the client
     socket.on('data', data => {
+      // console.log(data)
       try{
         const jsonString = data.toString();
         const jsonData = JSON.parse(jsonString)
           if('size' in jsonData){
-              console.log(data)
+              console.log(jsonData)
               console.log(jsonData)
               hostname = jsonData.host;
               console.log(hostname)
               client = hostname.toString()
               size = jsonData.size;
-              console.log(size)
+              console.log('size',size)
               event.reply('size', size);
               event.reply('client-connected', client);
       
@@ -241,7 +283,7 @@ ipcMain.on('server',(event, args)=>{
                 sending = false
                 receiving = true
               }catch(err){
-                    console.log("Could not write file", err.message)
+                    // console.log("Could not write file", err.message)
               }
     
               // Measure transfer speed and total bytes received
@@ -264,7 +306,7 @@ ipcMain.on('server',(event, args)=>{
               // }
               if (currentTime - lastUpdateTime >= 1) { // Update speed every 1 second
                 const { speed, received } = calculateTransferSpeed();
-                console.log((speed/(1024*1024)).toFixed(2), fileSize, size,  (fileSize*100)/size)
+                // console.log((speed/(1024*1024)).toFixed(2), fileSize, size,  (fileSize*100)/size)
                 event.reply('speed', {
                   "speed": speed.toFixed(2),
                   "sent": fileSize,
@@ -276,8 +318,8 @@ ipcMain.on('server',(event, args)=>{
                 }
                 sp = JSON.stringify(sp)
                 socket.write(sp)
-                console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
-                console.log(`Total bytes received: ${fileSize} bytes`);
+                // console.log(`Transfer speed: ${speed.toFixed(2)} bytes/sec`);
+                // console.log(`Total bytes received: ${fileSize} bytes`);
                 lastUpdateTime = currentTime;
               }
             }catch{
@@ -308,14 +350,20 @@ ipcMain.on('server',(event, args)=>{
     });
   
     })
-  
+    if(servers){
+      servers.destroy()
+    }
     server.listen(3000, '0.0.0.0', () => {
+      globalServer = server
+      
+      console.log('server', globalServer)
       console.log('Server listening on port 3000');
       const ad = mdns.createAdvertisement(mdns.tcp('tcp-service'), 3000, {
         name: 'My service',
         txtRecord: { description: 'A TCP service for file transfer' }
       });
       ad.start();
+      advertisement = ad
     });
   }catch(Exception){
     console.log(Exception)
@@ -326,16 +374,31 @@ ipcMain.on('client',(event, args)=>{
   console.log("Client ")
   const browser = mdns.createBrowser(mdns.tcp('tcp-service'));
   let serverAddress;
+  if(servers){
+    servers.destroy()
+  }
+  if(advertisement){
+    advertisement.stop()
+  }
+  if(globalServer){
+    globalServer.close(()=>{
+      console.log("server closed")
+    })
+  }
   browser.on('ready', () => {
     browser.discover();
   });
   browser.on('update', service => {
-    console.log(service)
+    console.log(getDeviceIPAddress())
     serverPort = service.port
       serverAddress = service.addresses[0];
+      if(getDeviceIPAddress()===service.addresses[0]){
+        return
+      }
       if(!serverPort){ 
         serverPort = 8080
       }
+      
       connectToServer(serverPort, serverAddress); 
       browser.stop();
     
@@ -348,8 +411,7 @@ ipcMain.on('client',(event, args)=>{
     // Connect to the server
     socket.connect(serverPort, serverAddress, () => {
       console.log('Connected to the server.');
-      servers = socket
-  
+      // console.log("client ", servers)
       let size = 0
     
         let fileExtension = '';
@@ -369,6 +431,9 @@ ipcMain.on('client',(event, args)=>{
       try{
         const saveDirectory = path.join(homeDirectory, 'Exchangee/');
         normalizedDirectory = saveDirectory.replace(/\\/g, '/');
+        if(localStorage.getItem('destination')){
+          normalizedDirectory = localStorage.getItem('destination')
+        }
         try{
           if (!fs.existsSync(normalizedDirectory)) {
             fs.mkdirSync(normalizedDirectory, { recursive: true });
@@ -531,6 +596,8 @@ ipcMain.handle('get-client', async (event) => {
 
 
 app.whenReady().then(()=>{
+    localStorage.setItem('server-running', 'false');
+    console.log('started')
     createWindow()
     app.on('activate', () => {
         // On macOS it's common to re-create a window in the app when the
@@ -588,6 +655,7 @@ ipcMain.on('startWeb',(event, args)=>{
         if(jsonData.type=="extension"){
           fileName = jsonData.message.name
           totalSize = jsonData.message.size
+          event.reply('size', totalSize);
           console.log(jsonData)
           // console.log(normalizedDirectory+fileName,)
           fileStream = fs.createWriteStream(normalizedDirectory+fileName, { highWaterMark: 64 * 1024 * 1024 });
@@ -650,5 +718,6 @@ ipcMain.on('web',(event, chunks)=>{
 
 // when all windows are closed
 app.on('window-all-closed', () => {
+   
     if (process.platform !== 'darwin') app.quit()
   })

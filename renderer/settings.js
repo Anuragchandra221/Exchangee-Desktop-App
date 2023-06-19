@@ -1,13 +1,13 @@
 if(localStorage.getItem('role')=='server'){
     document.getElementById('radio-server').checked = true
     if(localStorage.getItem('server-running')==='false'){
-        server.server()
+        // server.server()
         localStorage.setItem("server-running", 'true')
     }
 
 }else{
     document.getElementById('radio-server').checked = false
-    server.clients()
+    // server.clients()
     localStorage.setItem("server-running", 'false')
 }
 document.getElementById('radio-client').addEventListener('change', ()=>{
@@ -15,6 +15,8 @@ document.getElementById('radio-client').addEventListener('change', ()=>{
     if(document.getElementById('radio-client').checked){
         localStorage.setItem('role', 'client')
         localStorage.setItem("server-running", 'false')
+        console.log("hello client")
+        // server.destroySocket()
         server.clients()
     }else{
         console.log("checkekd client")

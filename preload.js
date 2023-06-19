@@ -42,6 +42,10 @@ contextBridge.exposeInMainWorld('server', {
   },
   startWeb: ()=>{
     ipcRenderer.send('startWeb')
+  },
+  destroySocket: ()=>{
+    console.log("socket destroy initialised")
+    ipcRenderer.send('destroy-socket')
   }
 })
 async function select(){

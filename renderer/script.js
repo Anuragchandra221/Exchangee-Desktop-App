@@ -10,7 +10,7 @@ if(localStorage.getItem('server-running')==='false'){
         console.log("serier")
         server.server()
         localStorage.setItem("server-running", 'true')
-    }else if(localStorage.getItem('role')=='client'){
+    }else if(localStorage.getItem('role')==='client'){
         console.log("client hfer")
         server.clients()
         localStorage.setItem("server-running", 'false')
