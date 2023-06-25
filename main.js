@@ -12,6 +12,7 @@ let win = ''
 let client = null
 let sp=0
 let sending = null
+let browser = null
 let receiving = null
 let ended = 0
 let advertisement = null
@@ -169,16 +170,13 @@ function getDeviceIPAddress() {
 }
 ipcMain.on('destroy-socket',async (event, args)=>{
   // console.log("Destroyed socket", servers)
-  servers = await servers
-  if(servers){
-
-    servers.destroy()
-  }
+  browser.stop()
+  console.log("browser stopped")
 })
 ipcMain.on('server',(event, args)=>{
   console.log("hihi")
   if(servers){
-
+console.log("closinf")
     servers.destroy()
   }
   if(advertisement){
@@ -191,7 +189,7 @@ ipcMain.on('server',(event, args)=>{
   }
   try{
     const server = net.createServer(socket=>{
-      
+      servers = socket
       // let data = {
       //   "host": 'host',
       //   "extension": 'fileExtension',
@@ -204,7 +202,7 @@ ipcMain.on('server',(event, args)=>{
       console.log("server is socket")
 
       console.log("Client Connected")
-      console.log(socket.bufferSize)
+      // console.log(socket.bufferSize)
       let size = 0
   
       let fileExtension = '';
@@ -353,10 +351,13 @@ ipcMain.on('server',(event, args)=>{
     if(servers){
       servers.destroy()
     }
+    if(localStorage.getItem('server-running')==='true'){
+      return 
+    }
     server.listen(3000, '0.0.0.0', () => {
       globalServer = server
       
-      console.log('server', globalServer)
+      // console.log('server', globalServer)
       console.log('Server listening on port 3000');
       const ad = mdns.createAdvertisement(mdns.tcp('tcp-service'), 3000, {
         name: 'My service',
@@ -372,7 +373,7 @@ ipcMain.on('server',(event, args)=>{
 })
 ipcMain.on('client',(event, args)=>{
   console.log("Client ")
-  const browser = mdns.createBrowser(mdns.tcp('tcp-service'));
+  browser = mdns.createBrowser(mdns.tcp('tcp-service'));
   let serverAddress;
   if(servers){
     servers.destroy()
@@ -385,28 +386,34 @@ ipcMain.on('client',(event, args)=>{
       console.log("server closed")
     })
   }
-  browser.on('ready', () => {
-    browser.discover();
-  });
-  browser.on('update', service => {
-    console.log(getDeviceIPAddress())
-    serverPort = service.port
-      serverAddress = service.addresses[0];
-      if(getDeviceIPAddress()===service.addresses[0]){
-        return
-      }
-      if(!serverPort){ 
-        serverPort = 8080
-      }
+  // console.log(localStorage.getItem('server-running'))
+  
+
+    browser.on('ready', () => {
+      browser.discover();
+    });
+    browser.on('update', service => {
+      // console.log(getDeviceIPAddress())
+      serverPort = service.port
+        serverAddress = service.addresses[0];
+        if(getDeviceIPAddress()===service.addresses[0]){
+          return
+        }
+        if(!serverPort){ 
+          serverPort = 8080
+        }
+        
+        connectToServer(serverPort, serverAddress); 
+        browser.stop();
       
-      connectToServer(serverPort, serverAddress); 
-      browser.stop();
-    
-  });
+    });
+  
 
   function connectToServer(serverPort, serverAddress) {
     // Create a TCP socket client
     const socket = new net.Socket();
+    servers = socket
+    console.log('client ', servers)
     let fileStream = null;
     // Connect to the server
     socket.connect(serverPort, serverAddress, () => {

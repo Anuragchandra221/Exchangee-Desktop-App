@@ -1,6 +1,8 @@
 if(localStorage.getItem('role')=='server'){
+    server.destroySocket()
     document.getElementById('radio-server').checked = true
     if(localStorage.getItem('server-running')==='false'){
+
         // server.server()
         localStorage.setItem("server-running", 'true')
     }
@@ -13,18 +15,13 @@ if(localStorage.getItem('role')=='server'){
 document.getElementById('radio-client').addEventListener('change', ()=>{
     console.log("changed")
     if(document.getElementById('radio-client').checked){
-        localStorage.setItem('role', 'client')
-        localStorage.setItem("server-running", 'false')
-        console.log("hello client")
-        // server.destroySocket()
-        server.clients()
-    }else{
-        console.log("checkekd client")
-        localStorage.setItem('role', 'server')
-        console.log(localStorage.getItem('server-running'))
-        if(localStorage.getItem('server-running')==='false'){
-            server.server()
-            localStorage.setItem("server-running", 'true')
+        if(localStorage.getItem('server-running')==='true'){
+            
+            localStorage.setItem('role', 'client')
+            localStorage.setItem("server-running", 'false')
+            console.log("hello client")
+            // server.destroySocket()
+            server.clients()
         }
     }
 })
@@ -33,13 +30,10 @@ document.getElementById('radio-server').addEventListener('change', ()=>{
     if(document.getElementById('radio-server').checked){
         localStorage.setItem('role', 'server')
         if(localStorage.getItem('server-running')==='false'){
+            server.destroySocket()
             server.server()
+            localStorage.setItem('server-running', 'true')
         }
-    }else{
-        console.log("checkekd client")
-        localStorage.setItem('role', 'client')
-        localStorage.setItem("server-running", false)
-
     }
 })
 document.getElementById('destination_path').innerHTML = localStorage.getItem('destination')
