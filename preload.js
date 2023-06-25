@@ -46,6 +46,9 @@ contextBridge.exposeInMainWorld('server', {
   destroySocket: ()=>{
     console.log("socket destroy initialised")
     ipcRenderer.send('destroy-socket')
+  },
+  status: ()=>{
+    return status()
   }
 })
 async function select(){
@@ -67,7 +70,14 @@ async function client(){
     });
   });
 }
-
+async function status(){
+  return new Promise((resolve, reject)=>{
+    ipcRenderer.on('status',(event, status)=>{
+      console.log(status)
+      resolve(status)
+    })
+  })
+}
 async function speed(callback){
   return new Promise((resolve, reject)=>{
     ipcRenderer.on('speed', (event, speed) => {

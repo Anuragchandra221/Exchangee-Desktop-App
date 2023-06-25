@@ -1,4 +1,5 @@
 
+
 document.getElementById('file-upload').addEventListener('change',(event)=>{
     const file = event.target.files[0].path.replace(/\\/g, '/')
     server.files(file)
@@ -16,7 +17,11 @@ if(localStorage.getItem('server-running')==='false'){
         localStorage.setItem("server-running", 'false')
     }
 }
-
+const status = async ()=>{
+    stat = await server.status()
+    document.getElementById('status').innerHTML = stat
+}
+status()
 document.getElementById('me').innerHTML = server.me()
 const storage = async ()=>{
     const storage = await server.storage()

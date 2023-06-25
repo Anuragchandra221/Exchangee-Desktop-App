@@ -92,6 +92,7 @@ ipcMain.on('input-file', (event, fileName)=>{
     }
     event.reply('size', fileSizeInBytes);
     const jsonString = JSON.stringify(data);
+    console.log(jsonString)
     servers.write(jsonString)
 
     let totalBytesSent = 0;
@@ -116,7 +117,7 @@ ipcMain.on('input-file', (event, fileName)=>{
 
         if('speed' in JSON.parse(jsonString)){
           console.log(Number(JSON.parse(jsonString).speed), ' hi ')
-          sp = Number(JSON.parse(jsonString).speed);
+          // sp = Number(JSON.parse(jsonString).speed);
           rec = Number(JSON.parse(jsonString).sent);
           event.reply('speed', {
             "speed": sp.toFixed(2), // Transfer speed in bytes per millisecond
@@ -200,6 +201,7 @@ console.log("closinf")
       // socket.write(jsonString)
       // servers.write("HIH")
       console.log("server is socket")
+      event.reply('status','connected')
 
       console.log("Client Connected")
       // console.log(socket.bufferSize)
@@ -418,6 +420,7 @@ ipcMain.on('client',(event, args)=>{
     // Connect to the server
     socket.connect(serverPort, serverAddress, () => {
       console.log('Connected to the server.');
+      event.reply('status','connected')
       // console.log("client ", servers)
       let size = 0
     
