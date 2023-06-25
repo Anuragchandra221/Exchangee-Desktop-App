@@ -129,7 +129,7 @@ ipcMain.on('input-file', (event, fileName)=>{
       }
     })
     readStream.on('data', chunk => {
-
+      console.log("servers ", servers)
       // Send the chunk to the servers
       servers.write(chunk);
       totalBytesSent += chunk.length;
@@ -413,7 +413,7 @@ ipcMain.on('client',(event, args)=>{
     // Create a TCP socket client
     const socket = new net.Socket();
     servers = socket
-    console.log('client ', servers)
+    // console.log('client ', servers)
     let fileStream = null;
     // Connect to the server
     socket.connect(serverPort, serverAddress, () => {
@@ -438,9 +438,9 @@ ipcMain.on('client',(event, args)=>{
       try{
         const saveDirectory = path.join(homeDirectory, 'Exchangee/');
         normalizedDirectory = saveDirectory.replace(/\\/g, '/');
-        if(localStorage.getItem('destination')){
-          normalizedDirectory = localStorage.getItem('destination')
-        }
+        // if(localStorage.getItem('destination')){
+        //   normalizedDirectory = localStorage.getItem('destination')
+        // }
         try{
           if (!fs.existsSync(normalizedDirectory)) {
             fs.mkdirSync(normalizedDirectory, { recursive: true });
@@ -467,7 +467,7 @@ ipcMain.on('client',(event, args)=>{
 
       socket.on('data', data => {
         // console.log("data flowing")
-        console.log(typeof(data))
+        // console.log(typeof(data))
         try{
           const jsonString = data.toString();
            const jsonData = JSON.parse(jsonString)

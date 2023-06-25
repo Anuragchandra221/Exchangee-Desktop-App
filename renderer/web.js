@@ -15,7 +15,7 @@ document.getElementById('file-upload').addEventListener('change', (e)=>{
     document.getElementById('file_name').innerHTML = file.name
     document.getElementById('speedtext').innerHTML = 'Speed :'
     if (file) {
-        const chunkSize = 1048576; // Adjust the chunk size as needed
+        const chunkSize = 4096; // Adjust the chunk size as needed
         let offset = 0;
 
         server.webExtension(file.name, file.size)
